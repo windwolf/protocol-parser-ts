@@ -2,7 +2,7 @@
   "name": "protocol-parser-ts",
   "version": "0.4.0",
   "description": "Binary protocol parser for typescript",
-  "main": "index.js",
+  "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
     "test": "jest --config jestconfig.json",
