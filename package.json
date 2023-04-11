@@ -43,6 +43,8 @@
     "lib/**/*"
   ],
   "dependencies": {
-    "circular-buffer-ts": "^0.2.2"
+    "@types/dom-serial": "^1.0.3",
+    "circular-buffer-ts": "^0.2.2",
+    "tslib": "^2.5.0"
   }
 }

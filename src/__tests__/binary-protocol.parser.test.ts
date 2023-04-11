@@ -199,7 +199,7 @@ test('binary-protocol.parser test7', () => {
     expect(frame).toBeNull();
 });
 
-test('binary-protocol.parser test7', () => {
+test('binary-protocol.parser test8', () => {
     const schema2 = {
 
         commandSize: <const>1,
