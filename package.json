@@ -1,6 +1,6 @@
 {
   "name": "protocol-parser-ts",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Binary protocol parser for typescript",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
