@@ -1,4 +1,4 @@
-import { BinaryProtocolParser } from "../binary-protocol.parser";
+import { BinaryProtocolFrame, BinaryProtocolParser } from "../binary-protocol.parser";
 
 
 test('binary-protocol.parser test1', () => {
@@ -243,4 +243,45 @@ test('binary-protocol.parser test8', () => {
     expect(frame).not.toBeNull();
     frame = parser.parse();
     expect(frame).toBeNull();
+});
+
+test('binary-protocol.frame test1', () => {
+    const schema1 = {
+
+        prefix: new Uint8Array([0xFF, 0xFE]),
+        commandSize: <const>1,
+        defaultLength: {
+            mode: <const>'fixed',
+            length: 4,
+        },
+        alterDataSize: <const>1,
+        crcSize: <const>1,
+        suffix: new Uint8Array([0xCC]),
+    };
+    const frame1 = BinaryProtocolFrame.create(schema1, new Uint8Array([0x0C]));
+    frame1.getAlterData()?.setUint8(0, 0x0A);
+    frame1.getContent()?.setUint32(0, 0x01020304);
+    frame1.getCrc()?.setUint8(0, 0x99);
+    expect(frame1.buffer).toEqual(new Uint8Array([
+        0xFF, 0xFE, 0x0C, 0x0A, 0x01, 0x02, 0x03, 0x04, 0x99, 0xCC]));
+});
+
+test('binary-protocol.frame test2', () => {
+    const schema1 = {
+        prefix: new Uint8Array([0xFF, 0xFE]),
+        commandSize: <const>1,
+        defaultLength: {
+            mode: <const>'dynamic',
+            lengthSize: <const>1,
+        },
+        alterDataSize: <const>1,
+        crcSize: <const>1,
+        suffix: new Uint8Array([0xCC]),
+    };
+    const frame1 = BinaryProtocolFrame.create(schema1, new Uint8Array([0x0C]), 4);
+    frame1.getAlterData()?.setUint8(0, 0x0A);
+    frame1.getContent()?.setUint32(0, 0x01020304);
+    frame1.getCrc()?.setUint8(0, 0x99);
+    expect(frame1.buffer).toEqual(new Uint8Array([
+        0xFF, 0xFE, 0x0C, 0x04, 0x0A, 0x01, 0x02, 0x03, 0x04, 0x99, 0xCC]));
 });

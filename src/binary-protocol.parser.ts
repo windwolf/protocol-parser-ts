@@ -107,13 +107,13 @@ function getDynamicLengthOverhead(schema: BinaryProtocolSchema, lengthSchema: Dy
     return oh;
 }
 
-function getLength(schema: BinaryProtocolSchema, lengthSchema: FixedLengthSchema | DynamicLengthSchema | FreeLengthSchema, contentLength: number): number {
+function getLength(schema: BinaryProtocolSchema, lengthSchema: FixedLengthSchema | DynamicLengthSchema | FreeLengthSchema, contentLength?: number): number {
     if (lengthSchema.mode === 'fixed') {
         return getContentOverhead(schema, lengthSchema) + lengthSchema.length;
     } else if (lengthSchema.mode === 'dynamic') {
-        return contentLength + getContentOverhead(schema, lengthSchema);
+        return (contentLength ?? 0) + getContentOverhead(schema, lengthSchema);
     } else {
-        return contentLength + getContentOverhead(schema, lengthSchema);
+        return (contentLength ?? 0) + getContentOverhead(schema, lengthSchema);
     }
 }
 
@@ -159,10 +159,13 @@ export class BinaryProtocolFrame {
         this.suffixSeg = { offset: 0, length: 0 };
     }
 
-    public static create(schema: BinaryProtocolSchema, contentLength: number,
-        command?: Uint8Array): BinaryProtocolFrame {
+    public static create(schema: BinaryProtocolSchema,
+        command?: Uint8Array, contentLength?: number): BinaryProtocolFrame {
         const lengthSchema = matchLengthSchema(schema, command);
         if (lengthSchema.mode === 'fixed') {
+            if (contentLength === undefined) {
+                contentLength = lengthSchema.length;
+            }
             if (contentLength !== lengthSchema.length) {
                 throw new Error(`content length ${contentLength} not match fixed length schema ${lengthSchema.length}`);
             }
@@ -170,7 +173,7 @@ export class BinaryProtocolFrame {
         const len = getLength(schema, lengthSchema, contentLength);
         const frame = new BinaryProtocolFrame();
         frame.buffer = new Uint8Array(len);
-        const view = new DataView(frame.buffer);
+        const view = new DataView(frame.buffer.buffer);
         let offset = 0;
         frame.prefixSeg.offset = offset;
         frame.prefixSeg.length = schema.prefix?.length ?? 0;
@@ -192,13 +195,13 @@ export class BinaryProtocolFrame {
         if (lengthSchema.mode === 'dynamic') {
             const dynamicLengthOverhead = getDynamicLengthOverhead(schema, lengthSchema);
             if (lengthSchema.lengthSize == 1) {
-                view.setUint8(frame.lengthSeg.offset, contentLength + dynamicLengthOverhead);
+                view.setUint8(frame.lengthSeg.offset, contentLength! + dynamicLengthOverhead);
             }
             else if (lengthSchema.lengthSize == 2) {
-                view.setUint16(frame.lengthSeg.offset, contentLength + dynamicLengthOverhead, lengthSchema.lengthEndian === 'little');
+                view.setUint16(frame.lengthSeg.offset, contentLength! + dynamicLengthOverhead, lengthSchema.lengthEndian === 'little');
             }
             else if (lengthSchema.lengthSize == 4) {
-                view.setUint32(frame.lengthSeg.offset, contentLength + dynamicLengthOverhead, lengthSchema.lengthEndian === 'little');
+                view.setUint32(frame.lengthSeg.offset, contentLength! + dynamicLengthOverhead, lengthSchema.lengthEndian === 'little');
             }
         }
 
@@ -207,7 +210,7 @@ export class BinaryProtocolFrame {
         offset += frame.alterDataSeg.length;
 
         frame.contentSeg.offset = offset;
-        frame.contentSeg.length = contentLength;
+        frame.contentSeg.length = contentLength!;
         offset += frame.contentSeg.length;
 
         frame.crcSeg.offset = offset;
@@ -223,31 +226,31 @@ export class BinaryProtocolFrame {
         return frame;
     }
     public getPrefix(): DataView | null {
-        return new DataView(this.buffer!, this.prefixSeg.offset, this.prefixSeg.length);
+        return new DataView(this.buffer!.buffer, this.prefixSeg.offset, this.prefixSeg.length);
     }
 
     public getCommand(): DataView | null {
-        return new DataView(this.buffer!, this.commandSeg.offset, this.commandSeg.length);
+        return new DataView(this.buffer!.buffer, this.commandSeg.offset, this.commandSeg.length);
     }
 
     public getLength(): DataView | null {
-        return new DataView(this.buffer!, this.lengthSeg.offset, this.lengthSeg.length);
+        return new DataView(this.buffer!.buffer, this.lengthSeg.offset, this.lengthSeg.length);
     }
 
     public getAlterData(): DataView | null {
-        return new DataView(this.buffer!, this.alterDataSeg.offset, this.alterDataSeg.length);
+        return new DataView(this.buffer!.buffer, this.alterDataSeg.offset, this.alterDataSeg.length);
     }
 
     public getContent(): DataView | null {
-        return new DataView(this.buffer!, this.contentSeg.offset, this.contentSeg.length);
+        return new DataView(this.buffer!.buffer, this.contentSeg.offset, this.contentSeg.length);
     }
 
     public getCrc(): DataView | null {
-        return new DataView(this.buffer!, this.crcSeg.offset, this.crcSeg.length);
+        return new DataView(this.buffer!.buffer, this.crcSeg.offset, this.crcSeg.length);
     }
 
     public getSuffix(): DataView | null {
-        return new DataView(this.buffer!, this.suffixSeg.offset, this.suffixSeg.length);
+        return new DataView(this.buffer!.buffer, this.suffixSeg.offset, this.suffixSeg.length);
     }
 
 }
