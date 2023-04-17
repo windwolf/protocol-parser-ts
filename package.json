@@ -13,8 +13,7 @@
     "prepublishOnly": "npm run test && npm run lint",
     "preversion": "npm run lint",
     "version": "git add -A src",
-    "postversion": "git push && git push --tags",
-    "publish": "npm publish ----registry=https://registry.npmjs.org/"
+    "postversion": "git push && git push --tags"
   },
   "repository": {
     "type": "git",
@@ -43,7 +42,6 @@
     "lib/**/*"
   ],
   "dependencies": {
-    "@types/dom-serial": "^1.0.3",
     "circular-buffer-ts": "^0.2.2",
     "tslib": "^2.5.0"
   }
